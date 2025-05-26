@@ -6,7 +6,7 @@
       <div class="flex items-center h-16 px-4 border-b border-gray-200">
         <div class="flex items-center">
           <i class="ri-graduation-cap-line text-2xl text-[#e52421] mr-2"></i>
-          <span class="text-xl font-bold text-gray-800">PromoManager</span>
+          <span class="text-xl font-bold text-gray-800">Gestion ODC</span>
         </div>
       </div>
       
@@ -30,7 +30,7 @@
               Référentiels
             </a>
             
-            <a href="#" class="bg-[#e52421]/10 text-[#e52421] group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+            <a href="<?= WEBROOT?>?controllers=promotion&page=listePromotion" class="bg-[#e52421]/10 text-[#e52421] group flex items-center px-3 py-2 text-sm font-medium rounded-md">
               <i class="ri-calendar-event-line text-lg mr-3"></i>
               Promotions
             </a>

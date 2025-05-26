@@ -1,0 +1,31 @@
+
+  #photo_container {
+    transition: all 0.3s ease;
+    border: 2px dashed transparent;
+  }
+  
+  #photo_container:hover {
+    background-color: #f3f4f6;
+    border-color: #e5e7eb;
+  }
+  
+  #photo_container.dragover {
+    border-color: #e52421 !important;
+    background-color: #fce8e8;
+  }
+  
+  #change_photo_btn {
+    transition: opacity 0.2s ease;
+  }
+  
+  #change_photo_btn:hover {
+    opacity: 0.9;
+  }
+  
+  #photo_preview img {
+    transition: transform 0.3s ease;
+  }
+  
+  #photo_preview:hover img {
+    transform: scale(1.05);
+  }
