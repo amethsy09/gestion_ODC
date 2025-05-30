@@ -1,4 +1,3 @@
-
 <style>
   #photo_container {
     transition: all 0.3s ease;
@@ -50,6 +49,24 @@
           </button>
         </div>
 
+        <!-- Search Section -->
+        <div class="mb-6">
+          <div class="flex flex-col md:flex-row gap-4">
+            <!-- Search Input -->
+            <div class="relative flex-grow">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="ri-search-line text-gray-400"></i>
+              </div>
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Rechercher un référentiel..."
+                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent"
+                onkeyup="filterReferentiels()">
+            </div>
+          </div>
+        </div>
+
         <!-- Referentiels Grid View -->
         <div id="gridView" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <?php if (empty($referentiels)): ?>
@@ -68,27 +85,26 @@
               <div class="bg-white rounded-xl overflow-hidden shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full">
                 <!-- Image Section -->
                 <div class="relative aspect-[4/3] overflow-hidden">
-                  <?php if (!empty($referentiel['photo'])): 
+                  <?php if (!empty($referentiel['photo'])):
+                    // Si c'est une ressource (stream), on lit son contenu en chaîne
+                    if (is_resource($referentiel['photo'])) {
+                      $data = stream_get_contents($referentiel['photo']);
+                    } else {
+                      $data = $referentiel['photo'];
+                    }
 
-                                        // Si c'est une ressource (stream), on lit son contenu en chaîne
-                                        if (is_resource($referentiel['photo'])) {
-                                            $data = stream_get_contents($referentiel['photo']);
-                                        } else {
-                                            $data = $referentiel['photo'];
-                                        }
-
-                                        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                                        $type = finfo_buffer($finfo, $data);
-                                        finfo_close($finfo);
-                                    ?>
-                                          <img src="data:<?= $type ?>;base64,<?= base64_encode($data) ?>" 
-                                              alt="<?= htmlspecialchars($referentiel['nom']) ?>" 
-                                              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                                      <?php else: ?>
-                                          <div class="w-full h-full bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
-                                              <i class="ri-team-line text-3xl text-red-200"></i>
-                                          </div>
-                                      <?php endif; ?>
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $type = finfo_buffer($finfo, $data);
+                    finfo_close($finfo);
+                  ?>
+                    <img src="data:<?= $type ?>;base64,<?= base64_encode($data) ?>"
+                      alt="<?= htmlspecialchars($referentiel['nom']) ?>"
+                      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                  <?php else: ?>
+                    <div class="w-full h-full bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
+                      <i class="ri-team-line text-3xl text-red-200"></i>
+                    </div>
+                  <?php endif; ?>
                 </div>
 
                 <!-- Content -->
@@ -143,7 +159,7 @@
     <!-- Modal content -->
     <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
       <form id="repository_form" method="POST" action="?controllers=referentiel&page=listeReferentiel" enctype="multipart/form-data" class="p-6">
-      <input type="hidden" name="action" value="add_referentiel">
+        <input type="hidden" name="action" value="add_referentiel">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-xl font-bold text-gray-900">Créer un nouveau référentiel</h3>
           <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
@@ -152,6 +168,23 @@
             </svg>
           </button>
         </div>
+
+        <?php if (!empty($_SESSION['form_errors'])): ?>
+          <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm text-red-700">
+                  <?= htmlspecialchars($_SESSION['flash']['message'] ?? '') ?>
+                </p>
+              </div>
+            </div>
+          </div>
+        <?php endif; ?>
 
         <!-- Photo section -->
         <div class="mb-6 text-center">
@@ -166,39 +199,57 @@
               <i class="ri-edit-line"></i> Changer
             </button>
           </div>
+          <div id="photo_error" class="text-red-500 text-xs text-center mb-2"></div>
         </div>
+
         <!-- Form fields -->
         <div class="space-y-4">
           <!-- Name -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Nom*</label>
-            <input type="text" name="nom"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent">
+            <input type="text" name="nom" value="<?= htmlspecialchars($_SESSION['old_input']['nom'] ?? '') ?>"
+              class="w-full px-3 py-2 border <?= !empty($_SESSION['form_errors']['nom']) ? 'border-red-500' : 'border-gray-300' ?> rounded-md focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent">
+            <div id="nom_error" class="text-red-500 text-xs mt-1">
+              <?= htmlspecialchars($_SESSION['form_errors']['nom'] ?? '') ?>
+            </div>
           </div>
 
           <!-- Description -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
             <textarea name="description" rows="3"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent"></textarea>
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent"><?= htmlspecialchars($_SESSION['old_input']['description'] ?? '') ?></textarea>
+            <div id="description_error" class="text-red-500 text-xs mt-1"> <?= htmlspecialchars($_SESSION['form_errors']['description_error'] ?? '') ?></div>
           </div>
+
+          <!-- Durée -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Durée (mois)*</label>
-            <input type="number" name="duree_mois" min="1" value="12"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent">
+            <input type="number" name="duree_mois" min="1" value="<?= htmlspecialchars($_SESSION['old_input']['duree_mois'] ?? '12') ?>"
+              class="w-full px-3 py-2 border <?= !empty($_SESSION['form_errors']['duree_mois']) ? 'border-red-500' : 'border-gray-300' ?> rounded-md focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent">
+            <div id="duree_error" class="text-red-500 text-xs mt-1">
+              <?= htmlspecialchars($_SESSION['form_errors']['duree_mois'] ?? '') ?>
+            </div>
           </div>
+
           <!-- Capacity -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Capacité*</label>
-            <input type="number" name="capacite" min="1" value="30"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent">
+            <input type="number" name="capacite" min="1" value="<?= htmlspecialchars($_SESSION['old_input']['capacite'] ?? '30') ?>"
+              class="w-full px-3 py-2 border <?= !empty($_SESSION['form_errors']['capacite']) ? 'border-red-500' : 'border-gray-300' ?> rounded-md focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent">
+            <div id="capacite_error" class="text-red-500 text-xs mt-1">
+              <?= htmlspecialchars($_SESSION['form_errors']['capacite'] ?? '') ?>
+            </div>
           </div>
 
           <!-- Sessions number -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de sessions*</label>
-            <input type="number" name="sessions_per_year" min="1" value="1"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent">
+            <input type="number" name="sessions_per_year" min="1" value="<?= htmlspecialchars($_SESSION['old_input']['sessions_per_year'] ?? '1') ?>"
+              class="w-full px-3 py-2 border <?= !empty($_SESSION['form_errors']['sessions_per_year']) ? 'border-red-500' : 'border-gray-300' ?> rounded-md focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent">
+            <div id="sessions_error" class="text-red-500 text-xs mt-1">
+              <?= htmlspecialchars($_SESSION['form_errors']['sessions_per_year'] ?? '') ?>
+            </div>
           </div>
         </div>
 
@@ -217,6 +268,7 @@
     </div>
   </div>
 </div>
+
 <script>
   // Global variables
   const modal = document.getElementById('add_repository_modal');
@@ -230,7 +282,11 @@
   if (form) {
     form.addEventListener('submit', function(e) {
       e.preventDefault();
-      
+
+      if (!validateForm()) {
+        return; // Ne pas soumettre si la validation échoue
+      }
+
       // Loading indicator
       const submitBtn = document.getElementById('submitBtn');
       if (submitBtn) {
@@ -238,9 +294,76 @@
         submitBtn.innerHTML = '<i class="ri-loader-4-line animate-spin"></i> En cours...';
         submitBtn.disabled = true;
       }
-      
+
       form.submit();
     });
+  }
+
+  // Fonction de validation
+  function validateForm() {
+    let isValid = true;
+
+    // Réinitialiser les erreurs
+    document.querySelectorAll('[id$="_error"]').forEach(el => el.textContent = '');
+
+    // Validation du nom
+    const nom = form.elements['nom'].value.trim();
+    if (!nom) {
+      document.getElementById('nom_error').textContent = 'Le nom est obligatoire';
+      isValid = false;
+    }
+    // Validation de la description
+    const description = form.elements['description'].value.trim();
+    if (!description) {
+      document.getElementById('description_error').textContent = 'La description est obligatoire';
+      isValid = false;
+    }
+    // Validation de la photo
+    if (!photoUpload.files.length) {
+      document.getElementById('photo_error').textContent = 'La photo est obligatoire';
+      isValid = false;
+    }
+
+
+    // Validation de la durée
+    const duree = form.elements['duree_mois'].value;
+    if (!duree || isNaN(duree) || duree < 1) {
+      document.getElementById('duree_error').textContent = 'Durée invalide (minimum 1 mois)';
+      isValid = false;
+    }
+
+    // Validation de la capacité
+    const capacite = form.elements['capacite'].value;
+    if (!capacite || isNaN(capacite) || capacite < 1) {
+      document.getElementById('capacite_error').textContent = 'Capacité invalide (minimum 1)';
+      isValid = false;
+    }
+
+    // Validation des sessions
+    const sessions = form.elements['sessions_per_year'].value;
+    if (!sessions || isNaN(sessions) || sessions < 1) {
+      document.getElementById('sessions_error').textContent = 'Nombre de sessions invalide (minimum 1)';
+      isValid = false;
+    }
+
+    // Validation de la photo (optionnelle selon vos besoins)
+    const photo = photoUpload.files[0];
+    if (photo) {
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      const maxSize = 2 * 1024 * 1024; // 2MB
+
+      if (!validTypes.includes(photo.type)) {
+        document.getElementById('photo_error').textContent = 'Format non supporté (JPEG, PNG ou GIF seulement)';
+        isValid = false;
+      }
+
+      if (photo.size > maxSize) {
+        document.getElementById('photo_error').textContent = 'La taille maximale est de 2MB';
+        isValid = false;
+      }
+    }
+
+    return isValid;
   }
 
   // Initialize buttons
@@ -322,7 +445,7 @@
   // Photo preview
   function previewPhoto(file) {
     if (!photoPreview) return;
-    
+
     const reader = new FileReader();
     reader.onload = e => {
       photoPreview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover" alt="Prévisualisation">`;
@@ -342,6 +465,59 @@
     }
   }
 
+  // Search and Filter functions
+  function filterReferentiels() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const filterByDuration = document.querySelector('input[value="duree"]:checked');
+    const filterByCapacity = document.querySelector('input[value="capacite"]:checked');
+
+    document.querySelectorAll('#gridView > div').forEach(card => {
+      const name = card.querySelector('h3').textContent.toLowerCase();
+      const duration = parseInt(card.querySelector('span:first-of-type').textContent);
+      const capacity = parseInt(card.querySelector('span:last-of-type').textContent);
+
+      let matchesSearch = name.includes(searchTerm);
+      let matchesDuration = !filterByDuration || duration > 6; // Exemple: filtre durée > 6 mois
+      let matchesCapacity = !filterByCapacity || capacity > 20; // Exemple: filtre capacité > 20
+
+      if (matchesSearch && matchesDuration && matchesCapacity) {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  function toggleFilterDropdown() {
+    const dropdown = document.getElementById('filterDropdown');
+    dropdown.classList.toggle('hidden');
+  }
+
+  function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+      checkbox.checked = false;
+    });
+    document.getElementById('filterDropdown').classList.add('hidden');
+    filterReferentiels();
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('filterDropdown');
+    const button = document.getElementById('filterDropdownButton');
+
+    if (!dropdown.contains(e.target) && !button.contains(e.target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
+
   window.openModal = openModal;
   window.closeModal = closeModal;
 </script>
+
+<?php
+// Nettoyer les sessions après affichage
+unset($_SESSION['form_errors']);
+unset($_SESSION['old_input']);
+?>

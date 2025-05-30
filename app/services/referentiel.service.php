@@ -1,5 +1,6 @@
 <?php
-require_once "../app/models/promotion.model.php";
+require_once "../app/models/referentiel.model.php";
+require_once "../app/models/model.php";
 
 function listeReferentiel()
 {
@@ -28,44 +29,60 @@ function listeReferentiel()
     ]);
 }
 
-
-
 function creerReferentielHandler()
 {
     if (isPost() && isset($_POST['action']) && $_POST['action'] === 'add_referentiel') {
         try {
-            $photoBinary = handlePhotoUpload();
-            if ($photoBinary === null) {
-                throw new Exception("Aucune photo téléchargée ou erreur lors du téléchargement");
+            // Validation des champs obligatoires
+            $requiredFields = ['nom', 'duree_mois', 'capacite', 'sessions_per_year'];
+            $errors = [];
+            
+            foreach ($requiredFields as $field) {
+                if (empty($_POST[$field])) {
+                    $errors[$field] = "Ce champ est obligatoire";
+                }
             }
+            
+            // Validation numérique
+            $numericFields = ['duree_mois', 'capacite', 'sessions_per_year'];
+            foreach ($numericFields as $field) {
+                if (!empty($_POST[$field]) && !is_numeric($_POST[$field])) {
+                    $errors[$field] = "Valeur numérique invalide";
+                }
+            }
+            
+            if (!empty($errors)) {
+                throw new Exception("Veuillez corriger les erreurs dans le formulaire");
+            }
+            
+            $photoBinary = handlePhotoUpload();
+            // La photo peut être optionnelle selon vos besoins
+            // if ($photoBinary === null) {
+            //     throw new Exception("Une photo est obligatoire");
+            // }
+            
             $data = [
                 'nom' => $_POST['nom'],
                 'description' => $_POST['description'] ?? null,
-                'duree_mois' => $_POST['duree_mois'],
-                'capacite' => $_POST['capacite'],
+                'duree_mois' => (int)$_POST['duree_mois'],
+                'capacite' => (int)$_POST['capacite'],
                 'photo' => $photoBinary, 
-                'sessions_per_year' => $_POST['sessions_per_year']
+                'sessions_per_year' => (int)$_POST['sessions_per_year']
             ];
             
-
-
-            // Validation simple
-            if (empty($data['nom'])) {
-                throw new Exception("Le nom est obligatoire");
-            }
-
             if (creerReferentiel($data)) {
                 $_SESSION['flash'] = ['type' => 'success', 'message' => 'Référentiel créé avec succès'];
                 header("Location: ?controllers=referentiel&page=listeReferentiel");
-                return;
+                exit;
             }
         } catch (Exception $e) {
             $_SESSION['flash'] = ['type' => 'error', 'message' => $e->getMessage()];
             $_SESSION['old_input'] = $_POST;
+            $_SESSION['form_errors'] = $errors ?? [];
         }
-
     }
 }
+
 function creerReferentiel(array $data): bool
 {
     $sql = "INSERT INTO referentiel 

@@ -9,32 +9,32 @@
           <span class="text-xl font-bold text-gray-800">Gestion ODC</span>
         </div>
       </div>
-      
+
       <!-- Sidebar navigation -->
       <div class="flex-1 overflow-y-auto">
         <nav class="px-4 py-4">
           <div class="space-y-1">
             <!-- Active item -->
-            <a href="#"class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+            <a href="#" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
               <i class="ri-dashboard-line text-lg mr-3"></i>
               Tableau de bord
             </a>
-            
-            <a href="<?= WEBROOT?>?controllers=apprenant&page=listeApprenant" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+
+            <a href="<?= WEBROOT ?>?controllers=apprenant&page=listeApprenant" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
               <i class="ri-group-line text-lg mr-3"></i>
               Apprenants
             </a>
-            
-            <a href="<?= WEBROOT?>?controllers=referentiel&page=listeReferentiel" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+
+            <a href="<?= WEBROOT ?>?controllers=referentiel&page=listeReferentiel" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
               <i class="ri-book-2-line text-lg mr-3"></i>
               Référentiels
             </a>
-            
-            <a href="<?= WEBROOT?>?controllers=promotion&page=listePromotion" class="bg-[#e52421]/10 text-[#e52421] group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+
+            <a href="<?= WEBROOT ?>?controllers=promotion&page=listePromotion" class="bg-[#e52421]/10 text-[#e52421] group flex items-center px-3 py-2 text-sm font-medium rounded-md">
               <i class="ri-calendar-event-line text-lg mr-3"></i>
               Promotions
             </a>
-            
+
             <a href="#" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
               <i class="ri-file-chart-line text-lg mr-3"></i>
               Gestion des présences
@@ -52,7 +52,7 @@
           </div>
         </nav>
       </div>
-      
+
       <!-- Sidebar footer -->
       <div class="p-4 border-t border-gray-200">
         <div class="flex items-center">
@@ -61,13 +61,13 @@
           </div>
           <div class="ml-3">
             <p class="text-sm font-medium text-gray-700">Admin User</p>
-            <a href="<?=WEBROOT?>?controllers=auth&page=logout" class="text-xs font-medium text-[#e52421] hover:text-[#c11e1b]">Déconnexion</a>
+            <a href="<?= WEBROOT ?>?controllers=auth&page=logout" class="text-xs font-medium text-[#e52421] hover:text-[#c11e1b]">Déconnexion</a>
           </div>
         </div>
       </div>
     </div>
   </div>
-  
+
   <!-- Mobile sidebar (hidden by default) -->
   <div class="md:hidden fixed inset-0 z-40" id="mobile-sidebar" style="display: none;">
     <div class="fixed inset-0 bg-gray-600 bg-opacity-75" aria-hidden="true"></div>
@@ -93,17 +93,14 @@
       </div>
     </div>
   </div>
-
   
+  <!-- Script for mobile sidebar toggle -->
+  <script>
+    document.getElementById('mobile-menu-button').addEventListener('click', function() {
+      document.getElementById('mobile-sidebar').style.display = 'block';
+    });
 
-
-<!-- Script for mobile sidebar toggle -->
-<script>
-  document.getElementById('mobile-menu-button').addEventListener('click', function() {
-    document.getElementById('mobile-sidebar').style.display = 'block';
-  });
-  
-  document.querySelector('#mobile-sidebar button').addEventListener('click', function() {
-    document.getElementById('mobile-sidebar').style.display = 'none';
-  });
-</script>
+    document.querySelector('#mobile-sidebar button').addEventListener('click', function() {
+      document.getElementById('mobile-sidebar').style.display = 'none';
+    });
+  </script>
