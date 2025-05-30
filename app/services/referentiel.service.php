@@ -1,169 +1,147 @@
 <?php
 require_once "../app/models/promotion.model.php";
 
-function listeReferentiel() {
-    // Paramètres de pagination
-    $itemsPerPage = 10;
-    $currentPage = $_GET['page_num'] ?? 1;
+function listeReferentiel()
+{
     $searchTerm = $_GET['search'] ?? '';
-    
+
     // Requête de base
     $sql = "SELECT * FROM referentiel";
     $params = [];
-    
+
     // Ajout de la recherche si nécessaire
     if (!empty($searchTerm)) {
         $sql .= " WHERE nom ILIKE ?";
         $params[] = "%$searchTerm%";
     }
-    
-    // Comptage pour la pagination
-    $countSql = str_replace('SELECT *', 'SELECT COUNT(*) as total', $sql);
-    $totalItems = executeQuery($countSql, $params)['total'];
-    $totalPages = ceil($totalItems / $itemsPerPage);
-    
-    // Ajout de la pagination à la requête principale
-    $offset = ($currentPage - 1) * $itemsPerPage;
-    $sql .= " ORDER BY nom LIMIT ? OFFSET ?";
-    $params[] = $itemsPerPage;
-    $params[] = $offset;
-    
+
+    // Ajout du tri
+    $sql .= " ORDER BY id DESC";
+
     // Récupération des données
     $referentiels = executeQuery($sql, $params, true);
-    
+
     // Affichage de la vue
     RenderView("referentiel/listeReferentiel.html.php", [
         'referentiels' => $referentiels,
-        'currentPage' => $currentPage,
-        'totalPages' => $totalPages,
         'searchTerm' => $searchTerm
     ]);
 }
-function creerReferentiel($data) {
-    $photoBinary = null;
-    
-    // Si une photo a été uploadée
-    if (!empty($_FILES['photo']['tmp_name'])) {
-        $photoBinary = file_get_contents($_FILES['photo']['tmp_name']);
+
+
+
+function creerReferentielHandler()
+{
+    if (isPost() && isset($_POST['action']) && $_POST['action'] === 'add_referentiel') {
+        try {
+            $photoBinary = handlePhotoUpload();
+            if ($photoBinary === null) {
+                throw new Exception("Aucune photo téléchargée ou erreur lors du téléchargement");
+            }
+            $data = [
+                'nom' => $_POST['nom'],
+                'description' => $_POST['description'] ?? null,
+                'duree_mois' => $_POST['duree_mois'],
+                'capacite' => $_POST['capacite'],
+                'photo' => $photoBinary, 
+                'sessions_per_year' => $_POST['sessions_per_year']
+            ];
+            
+
+
+            // Validation simple
+            if (empty($data['nom'])) {
+                throw new Exception("Le nom est obligatoire");
+            }
+
+            if (creerReferentiel($data)) {
+                $_SESSION['flash'] = ['type' => 'success', 'message' => 'Référentiel créé avec succès'];
+                header("Location: ?controllers=referentiel&page=listeReferentiel");
+                return;
+            }
+        } catch (Exception $e) {
+            $_SESSION['flash'] = ['type' => 'error', 'message' => $e->getMessage()];
+            $_SESSION['old_input'] = $_POST;
+        }
+
     }
-    
-    $sql = "INSERT INTO referentiel (nom, description, duree_mois, capacite, photo) 
-            VALUES (?, ?, ?, ?, ?)";
-    return executeQuery($sql, [
+}
+function creerReferentiel(array $data): bool
+{
+    $sql = "INSERT INTO referentiel 
+            (nom, description, duree_mois, capacite, photo, sessions_per_year) 
+            VALUES (?, ?, ?, ?, ?, ?)";
+
+    $params = [
         $data['nom'],
-        $data['description'],
+        !empty($data['description']) ? $data['description'] : null,
         $data['duree_mois'],
         $data['capacite'],
-        $photoBinary  // Le contenu binaire de l'image
-    ]);
+        $data['photo'],  // Doit contenir les données binaires brutes (pas base64)
+        $data['sessions_per_year']
+    ];
+
+    // Version spéciale pour gérer le LOB
+    $pdo = connectDB();
+    $stmt = $pdo->prepare($sql);
+    
+    $stmt->bindValue(1, $params[0]);
+    $stmt->bindValue(2, $params[1]);
+    $stmt->bindValue(3, $params[2], PDO::PARAM_INT);
+    $stmt->bindValue(4, $params[3], PDO::PARAM_INT);
+    $stmt->bindValue(5, $params[4], PDO::PARAM_LOB);  // Spécifie que c'est un LOB
+    $stmt->bindValue(6, $params[5], PDO::PARAM_INT);
+    
+    return $stmt->execute();
 }
 
-function getReferentielById($id) {
+function getReferentielById($id)
+{
     $sql = "SELECT id, nom, description, duree_mois, capacite, 
-                   CASE WHEN photo IS NOT NULL THEN true ELSE false END AS has_photo 
+            CASE WHEN photo IS NOT NULL THEN true ELSE false END AS has_photo 
             FROM referentiel 
             WHERE id = ?";
     return executeQuery($sql, [$id]);
 }
 
-function getReferentielPhoto($id) {
+function getReferentielPhoto($id)
+{
     $sql = "SELECT photo FROM referentiel WHERE id = ?";
     $result = executeQuery($sql, [$id]);
     return $result['photo'] ?? null;
 }
-function updateReferentielPhoto($id, $photoBinary) {
+
+function updateReferentielPhoto($id, $photoBinary)
+{
     $sql = "UPDATE referentiel SET photo = ? WHERE id = ?";
     return executeQuery($sql, [$photoBinary, $id]);
 }
-function handleCreateReferentiel() {
-    $errors = [];
-    $oldData = [];
 
-    if (isPost()) {
-        $oldData = [
-            'nom' => trim($_POST['nom'] ?? ''),
-            'description' => trim($_POST['description'] ?? ''),
-            'duree_mois' => trim($_POST['duree_mois'] ?? ''),
-            'capacite' => trim($_POST['capacite'] ?? '')
-        ];
-
-        // === Validation ===
-        if (empty($oldData['nom'])) {
-            $errors['nom'] = "Le nom est obligatoire";
-        } elseif (strlen($oldData['nom']) > 100) {
-            $errors['nom'] = "Le nom ne doit pas dépasser 100 caractères";
-        }
-
-        if (empty($oldData['duree_mois'])) {
-            $errors['duree_mois'] = "La durée est obligatoire";
-        } elseif (!ctype_digit($oldData['duree_mois']) || $oldData['duree_mois'] < 1) {
-            $errors['duree_mois'] = "La durée doit être un nombre entier positif";
-        }
-
-        if (empty($oldData['capacite'])) {
-            $errors['capacite'] = "La capacité est obligatoire";
-        } elseif (!ctype_digit($oldData['capacite']) || $oldData['capacite'] < 1) {
-            $errors['capacite'] = "La capacité doit être un nombre entier positif";
-        }
-
-        // === Image ===
-        $photoBinary = null;
-        if (empty($_FILES['photo']['name'])) {
-            $errors['photo'] = "Une image est obligatoire";
-        } else {
-            try {
-                $photoBinary = handlePhotoUpload();
-            } catch (Exception $e) {
-                $errors['photo'] = $e->getMessage();
-            }
-        }
-
-        // === Insertion si pas d'erreur ===
-        if (empty($errors)) {
-            $data = $oldData;
-            $data['photo'] = $photoBinary;
-
-            $success = creerReferentiel($data);
-
-            if ($success) {
-                $_SESSION['flash'] = ['type' => 'success', 'message' => 'Référentiel créé avec succès'];
-                redirect('referentiel', 'listeReferentiel');
-            } else {
-                $errors['general'] = "Erreur lors de la création du référentiel";
-            }
-        }
-    }
-
-    renderView("referentiel/formReferentiel.html.php", [
-        'action' => 'creer',
-        'errors' => $errors,
-        'referentiel' => $oldData,
-        'pageTitle' => 'Créer un référentiel'
-    ]);
-}
-function handlePhotoUpload() {
+function handlePhotoUpload()
+{
     if (!isset($_FILES['photo']) || $_FILES['photo']['error'] === UPLOAD_ERR_NO_FILE) {
         return null;
     }
-    
+
     if ($_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
         throw new Exception("Erreur lors du téléchargement de l'image");
     }
-    
+
     $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
     $maxSize = 2 * 1024 * 1024; // 2MB
-    
+
     $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
     $mime = finfo_file($fileInfo, $_FILES['photo']['tmp_name']);
     finfo_close($fileInfo);
-    
+
     if (!in_array($mime, $allowedTypes)) {
         throw new Exception("Format d'image non supporté (seuls JPG, PNG et GIF sont autorisés)");
     }
-    
+
     if ($_FILES['photo']['size'] > $maxSize) {
         throw new Exception("La taille de l'image ne doit pas dépasser 2MB");
     }
-    
+
+    // Retourne directement les données binaires sans encodage base64
     return file_get_contents($_FILES['photo']['tmp_name']);
 }

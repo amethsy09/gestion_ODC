@@ -8,11 +8,9 @@ if ($page == 'login') {
     logout();
 }
 function login() {
-                $_SESSION['error'] = [];
-
+    $_SESSION['error'] = [];
 
     if (isPost()) {
-
         $email = trim($_POST['email'] ?? '');
         $password = trim($_POST['password'] ?? '');
 
@@ -32,24 +30,30 @@ function login() {
 
         // Si pas d'erreur -> authentification
         if (empty($_SESSION['error'])) {
-            // $user = credentialUser($email, $password);
-            $user = loginabc($email, $password);
-            if ($user && $user['mot_de_passe'] === $password) {
-                $_SESSION['user'] = $user;
-                
-                switch ($user['role']) {
-                    case 'admin':
-                        redirect('promotion', 'listePromotion');
-                        break;
-                    default:
-                        redirect('auth', 'login');
-                }
+            // Vérifier d'abord si l'email existe
+            $user = getUserByEmail($email); 
+            
+            if (!$user) {
+                $_SESSION['error']['email'] = 'Cette adresse email n\'existe pas';
             } else {
-                $_SESSION['error']['global'] = 'Email ou mot de passe incorrect';
+                // Maintenant vérifier le mot de passe
+                $user = loginabc($email, $password);
+                if ($user && $user['mot_de_passe'] === $password) {
+                    $_SESSION['user'] = $user;
+                    
+                    switch ($user['role']) {
+                        case 'admin':
+                            redirect('promotion', 'listePromotion');
+                            break;
+                        default:
+                            redirect('auth', 'login');
+                    }
+                } else {
+                    $_SESSION['error']['global'] = 'Mot de passe incorrect';
+                }
             }
         }
     }
-
 
     renderView("security/login.html.php", ['error' => $_SESSION['error']], "security");
 }

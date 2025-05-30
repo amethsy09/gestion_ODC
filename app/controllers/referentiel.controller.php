@@ -1,7 +1,6 @@
 <?php
 require_once "../app/services/referentiel.service.php";
 require_once "../app/models/referentiel.model.php";
-// require_once "../helpers/functions.php";
 
 // Vérifie l'authentification
 NotReturn();
@@ -9,15 +8,14 @@ $page = $_GET['page'] ?? 'listeReferentiel';
 $search = $_GET['search'] ?? '';
 $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
-
 try {
     switch ($page) {
         case "listeReferentiel":
-            listeReferentiel();
-            break;
-            
-        case "creer":
-            handleCreateReferentiel();
+            if (isPost() && isset($_POST['action']) && $_POST['action'] === 'add_referentiel') {
+                creerReferentielHandler();
+            } else {
+                listeReferentiel();
+            }
             break;
                 
         default:

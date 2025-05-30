@@ -55,7 +55,15 @@ function isConnect(): bool {
     return isset($_SESSION["user"]);
 }
 
-
+function getUserByEmail($email) {
+    // Connexion à la base de données
+    $pdo = connectDB();
+    
+    $stmt = $pdo->prepare("SELECT * FROM utilisateur WHERE email = ?");
+    $stmt->execute([$email]);
+    
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 function loginabc(string $email, string $password): array|bool
 {
     $pdo = connectDB();

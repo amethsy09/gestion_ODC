@@ -5,6 +5,7 @@ require_once "../app/controllers/controller.php";
 $controllers = [
     "promotion" => "../app/controllers/promotion.controller.php",
     "referentiel" => "../app/controllers/referentiel.controller.php",
+    "apprenant" => "../app/controllers/apprenant.controller.php",
     "auth"  => "../app/controllers/auth.controller.php"
 ];
 
