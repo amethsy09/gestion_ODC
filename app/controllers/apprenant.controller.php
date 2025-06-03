@@ -11,7 +11,11 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 try {
     switch ($page) {
         case "listeApprenant":
-           listeApprenant();
+          if (isPost() && isset($_POST['action']) && $_POST['action'] === 'add_referentiel') {
+                creerApprenantHandler();
+            } else {
+                listeApprenant();
+            }
             break;
 
         default:
