@@ -65,6 +65,9 @@
                 onkeyup="filterReferentiels()">
             </div>
           </div>
+          <div id="searchErrorMessage" class="hidden mt-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+            <p>Aucun référentiel trouvé pour votre recherche .</p>
+          </div>
         </div>
 
         <!-- Referentiels Grid View -->
@@ -278,6 +281,7 @@
   const changePhotoBtn = document.getElementById('change_photo_btn');
   const photoContainer = document.getElementById('photo_container');
 
+
   // Form submission handling
   if (form) {
     form.addEventListener('submit', function(e) {
@@ -470,22 +474,30 @@
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const filterByDuration = document.querySelector('input[value="duree"]:checked');
     const filterByCapacity = document.querySelector('input[value="capacite"]:checked');
-
+    const errorMessage = document.getElementById('searchErrorMessage');
+    let visibleCount = 0;
     document.querySelectorAll('#gridView > div').forEach(card => {
       const name = card.querySelector('h3').textContent.toLowerCase();
       const duration = parseInt(card.querySelector('span:first-of-type').textContent);
       const capacity = parseInt(card.querySelector('span:last-of-type').textContent);
 
       let matchesSearch = name.includes(searchTerm);
-      let matchesDuration = !filterByDuration || duration > 6; // Exemple: filtre durée > 6 mois
+      let matchesDuration = !filterByDuration || duration > 6;
       let matchesCapacity = !filterByCapacity || capacity > 20; // Exemple: filtre capacité > 20
 
       if (matchesSearch && matchesDuration && matchesCapacity) {
         card.style.display = 'flex';
+        visibleCount++;
       } else {
         card.style.display = 'none';
       }
     });
+    // Afficher ou masquer le message d'erreur
+    if (visibleCount === 0 && (searchTerm.length > 0 || filterByDuration || filterByCapacity)) {
+      errorMessage.classList.remove('hidden');
+    } else {
+      errorMessage.classList.add('hidden');
+    }
   }
 
   function toggleFilterDropdown() {
@@ -496,11 +508,12 @@
   function resetFilters() {
     document.getElementById('searchInput').value = '';
     document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-      checkbox.checked = false;
+        checkbox.checked = false;
     });
     document.getElementById('filterDropdown').classList.add('hidden');
+    document.getElementById('searchErrorMessage').classList.add('hidden');
     filterReferentiels();
-  }
+}
 
   // Close dropdown when clicking outside
   document.addEventListener('click', function(e) {

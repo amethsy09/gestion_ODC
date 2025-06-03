@@ -2,10 +2,9 @@
 require_once "../app/models/referentiel.model.php";
 require_once "../app/models/model.php";
 
-function listeReferentiel()
+    function listeReferentiel()
 {
     $searchTerm = $_GET['search'] ?? '';
-
     // Requête de base
     $sql = "SELECT * FROM referentiel";
     $params = [];
@@ -20,8 +19,7 @@ function listeReferentiel()
     $sql .= " ORDER BY id DESC";
 
     // Récupération des données
-    $referentiels = executeQuery($sql, $params, true);
-
+    $referentiels = executeQuery($sql, $params, true); 
     // Affichage de la vue
     RenderView("referentiel/listeReferentiel.html.php", [
         'referentiels' => $referentiels,
