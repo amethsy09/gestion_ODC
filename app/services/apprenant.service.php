@@ -1,6 +1,7 @@
 <?php
-require_once "../app/models/apprenant.model.php";
-require_once "../app/models/model.php";
+// Utilisation de __DIR__ pour obtenir le chemin absolu du répertoire courant
+require_once __DIR__ . "/../models/apprenant.model.php";
+require_once __DIR__ . "/../models/model.php";
 
 function listeApprenant()
 {
@@ -11,10 +12,9 @@ function listeApprenant()
 
     // Requête de base avec jointures
     $sql = "SELECT a.*, 
-                   r.nom as nom_referentiel,
+                   a.referentiel as nom_referentiel,
                    p.nom as nom_promotion
             FROM apprenant a
-            LEFT JOIN referentiel r ON a.referentiel = r.id
             LEFT JOIN promotion p ON a.promotion_id = p.id
             WHERE 1=1";
 
@@ -75,52 +75,95 @@ function listeApprenant()
 
 function creerApprenantHandler()
 {
-    if (isPost() && isset($_POST['action']) && $_POST['action'] === 'add_apprenant') {
-        try {
-            // Validation des champs obligatoires
-            $requiredFields = ['matricule', 'prenom', 'nom', 'telephone', 'referentiel', 'statut'];
-            $errors = [];
-
-            foreach ($requiredFields as $field) {
-                if (empty($_POST[$field])) {
-                    $errors[$field] = "Ce champ est obligatoire";
-                }
-            }
-
-            // Validation du matricule unique
-            $existing = executeQuery("SELECT id FROM apprenant WHERE matricule = ?", [$_POST['matricule']]);
-            if ($existing) {
-                $errors['matricule'] = "Ce matricule est déjà utilisé";
-            }
-
-            if (!empty($errors)) {
-                throw new Exception("Veuillez corriger les erreurs dans le formulaire");
-            }
-
-            $photoBinary = handlePhotoUpload();
-
-            $data = [
-                'photo' => $photoBinary,
-                'matricule' => $_POST['matricule'],
-                'prenom' => $_POST['prenom'],
-                'nom' => $_POST['nom'],
-                'telephone' => $_POST['telephone'],
-                'referentiel' => $_POST['referentiel'],
-                'statut' => $_POST['statut'],
-
-
-            ];
-
-            if (creerApprenant($data)) {
-                $_SESSION['flash'] = ['type' => 'success', 'message' => 'Apprenant créé avec succès'];
-                header("Location: ?controllers=apprenant&page=listeApprenant");
-                exit;
-            }
-        } catch (Exception $e) {
-            $_SESSION['flash'] = ['type' => 'error', 'message' => $e->getMessage()];
-            $_SESSION['old_input'] = $_POST;
-            $_SESSION['form_errors'] = $errors ?? [];
+    if (!isPost() || !isset($_POST['action']) || $_POST['action'] !== 'add_apprenant') {
+        return;
+    }
+    
+    // Sauvegarder les anciennes entrées pour les réafficher en cas d'erreur
+    $_SESSION['old_input'] = $_POST;
+    
+    // Validation des champs obligatoires
+    $requiredFields = [
+        'matricule' => 'Matricule',
+        'prenom' => 'Prénom',
+        'nom' => 'Nom',
+        'telephone' => 'Téléphone',
+        'email' => 'Email',
+        'referentiel' => 'Référentiel',
+        'promotion_id' => 'Promotion',
+        'statut' => 'Statut'
+    ];
+    
+    $errors = [];
+    
+    // Validation des champs requis
+    foreach ($requiredFields as $field => $label) {
+        if (empty(trim($_POST[$field] ?? ''))) {
+            $errors[$field] = "Le champ $label est obligatoire";
         }
+    }
+    
+    // Validation de l'email
+    if (!filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL) && !isset($errors['email'])) {
+        $errors['email'] = "Veuillez entrer une adresse email valide";
+    }
+    
+    // Validation du téléphone (format simplifié)
+    $phone = preg_replace('/[^0-9]/', '', $_POST['telephone'] ?? '');
+    if (strlen($phone) < 9 && !isset($errors['telephone'])) {
+        $errors['telephone'] = "Le numéro de téléphone est invalide";
+    }
+    
+    // Validation du matricule unique
+    if (!isset($errors['matricule'])) {
+        $existing = executeQuery("SELECT id FROM apprenant WHERE matricule = ?", [$_POST['matricule']]);
+        if ($existing) {
+            $errors['matricule'] = "Ce matricule est déjà utilisé";
+        }
+    }
+    
+    // Si des erreurs sont détectées, on les enregistre et on redirige
+    if (!empty($errors)) {
+        $_SESSION['form_errors'] = $errors;
+        header('Location: ' . $_SERVER['HTTP_REFERER']);
+        exit();
+    }
+
+    try {
+        $photoBinary = handlePhotoUpload();
+
+        // Création de l'apprenant
+        $data = [
+            'matricule' => $_POST['matricule'],
+            'prenom' => $_POST['prenom'],
+            'nom' => $_POST['nom'],
+            'telephone' => $_POST['telephone'],
+            'referentiel' => $_POST['referentiel'],
+            'statut' => $_POST['statut'],
+            'photo' => $photoBinary
+        ];
+
+        $apprenantId = creerApprenant($data);
+
+        if ($apprenantId) {
+            // Nettoyer les anciennes entrées et erreurs
+            unset($_SESSION['form_errors']);
+            unset($_SESSION['old_input']);
+            
+            // Message de succès
+            $_SESSION['success_message'] = "L'apprenant a été ajouté avec succès";
+            
+            // Redirection vers la liste des apprenants
+            header('Location: index.php?controllers=apprenant&page=listeApprenant');
+            exit();
+        } else {
+            throw new Exception("Une erreur est survenue lors de la création de l'apprenant");
+        }
+    } catch (Exception $e) {
+        error_log("Erreur lors de la création de l'apprenant : " . $e->getMessage());
+        $_SESSION['error_message'] = $e->getMessage();
+        header('Location: ' . $_SERVER['HTTP_REFERER']);
+        exit();
     }
 }
 
