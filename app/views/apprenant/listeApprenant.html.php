@@ -224,7 +224,7 @@
                         </div>
                         <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                           <li>
-                            <a href="?controllers=apprenant&page=detailApprenant&id=<?= $apprenant['id'] ?>" class="flex items-center">
+                            <a href="?controllers=apprenant&page=voirdetail&id=<?= $apprenant['id'] ?>" class="flex items-center">
                               <i class="ri-eye-line mr-2"></i>
                               <span>Voir les détails</span>
                             </a>

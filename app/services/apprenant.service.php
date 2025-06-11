@@ -73,19 +73,14 @@ function listeApprenant()
     ]);
 }
 
-function creerApprenantHandler()
-{
-    if (!isPost() || !isset($_POST['action']) || $_POST['action'] !== 'add_apprenant') {
-        return;
-    }
-    
-    // Sauvegarder les anciennes entrées pour les réafficher en cas d'erreur
+function creerApprenantHandler() {
+    // Sauvegarde des anciennes entrées
     $_SESSION['old_input'] = $_POST;
     
-    // Validation des champs obligatoires
+    // Validation des champs
     $requiredFields = [
         'matricule' => 'Matricule',
-        'prenom' => 'Prénom',
+        'prenom' => 'Prénom', 
         'nom' => 'Nom',
         'telephone' => 'Téléphone',
         'email' => 'Email',
@@ -96,33 +91,32 @@ function creerApprenantHandler()
     
     $errors = [];
     
-    // Validation des champs requis
     foreach ($requiredFields as $field => $label) {
         if (empty(trim($_POST[$field] ?? ''))) {
             $errors[$field] = "Le champ $label est obligatoire";
         }
     }
     
-    // Validation de l'email
+    // Validation email
     if (!filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL) && !isset($errors['email'])) {
-        $errors['email'] = "Veuillez entrer une adresse email valide";
+        $errors['email'] = "Email invalide";
     }
     
-    // Validation du téléphone (format simplifié)
+    // Validation téléphone
     $phone = preg_replace('/[^0-9]/', '', $_POST['telephone'] ?? '');
     if (strlen($phone) < 9 && !isset($errors['telephone'])) {
-        $errors['telephone'] = "Le numéro de téléphone est invalide";
+        $errors['telephone'] = "Téléphone invalide (min 9 chiffres)";
     }
     
-    // Validation du matricule unique
+    // Vérification matricule unique
     if (!isset($errors['matricule'])) {
         $existing = executeQuery("SELECT id FROM apprenant WHERE matricule = ?", [$_POST['matricule']]);
         if ($existing) {
-            $errors['matricule'] = "Ce matricule est déjà utilisé";
+            $errors['matricule'] = "Matricule déjà utilisé";
         }
     }
     
-    // Si des erreurs sont détectées, on les enregistre et on redirige
+    // Si erreurs, redirection
     if (!empty($errors)) {
         $_SESSION['form_errors'] = $errors;
         header('Location: ' . $_SERVER['HTTP_REFERER']);
@@ -132,13 +126,14 @@ function creerApprenantHandler()
     try {
         $photoBinary = handlePhotoUpload();
 
-        // Création de l'apprenant
         $data = [
             'matricule' => $_POST['matricule'],
             'prenom' => $_POST['prenom'],
             'nom' => $_POST['nom'],
             'telephone' => $_POST['telephone'],
+            'email' => $_POST['email'],
             'referentiel' => $_POST['referentiel'],
+            'promotion_id' => $_POST['promotion_id'],
             'statut' => $_POST['statut'],
             'photo' => $photoBinary
         ];
@@ -146,32 +141,25 @@ function creerApprenantHandler()
         $apprenantId = creerApprenant($data);
 
         if ($apprenantId) {
-            // Nettoyer les anciennes entrées et erreurs
-            unset($_SESSION['form_errors']);
-            unset($_SESSION['old_input']);
-            
-            // Message de succès
-            $_SESSION['success_message'] = "L'apprenant a été ajouté avec succès";
-            
-            // Redirection vers la liste des apprenants
-            header('Location: index.php?controllers=apprenant&page=listeApprenant');
+            unset($_SESSION['form_errors'], $_SESSION['old_input']);
+            $_SESSION['success_message'] = "Apprenant ajouté avec succès";
+            header('Location: index.php?controller=apprenant&page=listeApprenant');
             exit();
         } else {
-            throw new Exception("Une erreur est survenue lors de la création de l'apprenant");
+            throw new Exception("Erreur lors de la création");
         }
     } catch (Exception $e) {
-        error_log("Erreur lors de la création de l'apprenant : " . $e->getMessage());
+        error_log("Erreur création apprenant: " . $e->getMessage());
         $_SESSION['error_message'] = $e->getMessage();
         header('Location: ' . $_SERVER['HTTP_REFERER']);
         exit();
     }
 }
 
-function creerApprenant(array $data): bool
-{
-    $sql = "INSERT INTO apprenants 
-            (photo, matricule, prenom, nom, telephone, referentiel, statut) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)";
+function creerApprenant(array $data): int {
+    $sql = "INSERT INTO apprenant 
+            (photo, matricule, prenom, nom, telephone, email, referentiel, promotion_id, statut) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
 
     $params = [
         $data['photo'],
@@ -179,20 +167,23 @@ function creerApprenant(array $data): bool
         $data['prenom'],
         $data['nom'],
         $data['telephone'],
+        $data['email'],
         $data['referentiel'],
+        $data['promotion_id'],
         $data['statut']
     ];
 
     $pdo = connectDB();
     $stmt = $pdo->prepare($sql);
-
-    // Binding des paramètres
-    foreach ($params as $index => $value) {
-        $paramType = is_int($value) ? PDO::PARAM_INT : (is_resource($value) ? PDO::PARAM_LOB : PDO::PARAM_STR);
-        $stmt->bindValue($index + 1, $value, $paramType);
+    
+    foreach ($params as $i => $value) {
+        $paramType = is_int($value) ? PDO::PARAM_INT : 
+                    (is_resource($value) ? PDO::PARAM_LOB : PDO::PARAM_STR);
+        $stmt->bindValue($i+1, $value, $paramType);
     }
 
-    return $stmt->execute();
+    $stmt->execute();
+    return $pdo->lastInsertId();
 }
 
 function getApprenantById($id)
