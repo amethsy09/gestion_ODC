@@ -12,46 +12,70 @@
 
       <!-- Sidebar navigation -->
       <div class="flex-1 overflow-y-auto">
-        <nav class="px-4 py-4">
-          <div class="space-y-1">
-            <!-- Active item -->
-            <a href="#" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-              <i class="ri-dashboard-line text-lg mr-3"></i>
-              Tableau de bord
+    <nav class="px-4 py-4">
+        <div class="space-y-1">
+            <?php
+            // Récupérer la page actuelle depuis l'URL
+            $currentPage = $_GET['page'] ?? 'dashboard';
+            $currentController = $_GET['controllers'] ?? 'apprenant';
+            
+            // Fonction pour déterminer si un lien est actif
+            function isActive($controller, $page, $currentController, $currentPage) {
+                return ($controller === $currentController && $page === $currentPage);
+            }
+            ?>
+            
+            <!-- Tableau de bord -->
+            <a href="<?= WEBROOT ?>?controllers=apprenant&page=dashboard" 
+               class="<?= isActive('apprenant', 'dashboard', $currentController, $currentPage) ? 'bg-[#e52421]/10 text-[#e52421]' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' ?> group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                <i class="ri-dashboard-line text-lg mr-3"></i>
+                Tableau de bord
             </a>
 
-            <a href="<?= WEBROOT ?>?controllers=apprenant&page=listeApprenant" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-              <i class="ri-group-line text-lg mr-3"></i>
-              Apprenants
+            <!-- Apprenants -->
+            <a href="<?= WEBROOT ?>?controllers=apprenant&page=listeApprenant" 
+               class="<?= isActive('apprenant', 'listeApprenant', $currentController, $currentPage) ? 'bg-[#e52421]/10 text-[#e52421]' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' ?> group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                <i class="ri-group-line text-lg mr-3"></i>
+                Apprenants
             </a>
 
-            <a href="<?= WEBROOT ?>?controllers=referentiel&page=listeReferentiel" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-              <i class="ri-book-2-line text-lg mr-3"></i>
-              Référentiels
+            <!-- Référentiels -->
+            <a href="<?= WEBROOT ?>?controllers=referentiel&page=listeReferentiel" 
+               class="<?= isActive('referentiel', 'listeReferentiel', $currentController, $currentPage) ? 'bg-[#e52421]/10 text-[#e52421]' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' ?> group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                <i class="ri-book-2-line text-lg mr-3"></i>
+                Référentiels
             </a>
 
-            <a href="<?= WEBROOT ?>?controllers=promotion&page=listePromotion" class="bg-[#e52421]/10 text-[#e52421] group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-              <i class="ri-calendar-event-line text-lg mr-3"></i>
-              Promotions
+            <!-- Promotions -->
+            <a href="<?= WEBROOT ?>?controllers=promotion&page=listePromotion" 
+               class="<?= isActive('promotion', 'listePromotion', $currentController, $currentPage) ? 'bg-[#e52421]/10 text-[#e52421]' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' ?> group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                <i class="ri-calendar-event-line text-lg mr-3"></i>
+                Promotions
             </a>
 
-            <a href="#" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-              <i class="ri-file-chart-line text-lg mr-3"></i>
-              Gestion des présences
+            <!-- Gestion des présences -->
+            <a href="#" 
+               class="<?= isActive('presence', 'listePresence', $currentController, $currentPage) ? 'bg-[#e52421]/10 text-[#e52421]' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' ?> group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                <i class="ri-file-chart-line text-lg mr-3"></i>
+                Gestion des présences
             </a>
 
-            <a href="#" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-              <i class="ri-file-chart-line text-lg mr-3"></i>
-              Kits et Laptops
+            <!-- Kits et Laptops -->
+            <a href="#" 
+               class="<?= isActive('kit', 'listeKit', $currentController, $currentPage) ? 'bg-[#e52421]/10 text-[#e52421]' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' ?> group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                <i class="ri-file-chart-line text-lg mr-3"></i>
+                Kits et Laptops
             </a>
 
-            <a href="#" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-              <i class="ri-file-chart-line text-lg mr-3"></i>
-              Rapport et Stats
+            <!-- Rapport et Stats -->
+            <a href="#" 
+               class="<?= isActive('rapport', 'listeRapport', $currentController, $currentPage) ? 'bg-[#e52421]/10 text-[#e52421]' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' ?> group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                <i class="ri-file-chart-line text-lg mr-3"></i>
+                Rapport et Stats
             </a>
-          </div>
-        </nav>
-      </div>
+        </div>
+    </nav>
+</div>
 
       <!-- Sidebar footer -->
       <div class="p-4 border-t border-gray-200">

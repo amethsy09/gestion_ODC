@@ -58,19 +58,39 @@
     <div class="p-6 overflow-y-auto h-[calc(100vh-80px)]">
       <div class="p-6 bg-white rounded-xl shadow-sm">
         <!-- Header Section -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <div>
-            <h1 class="text-2xl font-bold text-[#e52421]">Gestion des Apprenants</h1>
-            <p class="text-sm text-gray-500">Administrez les apprenants de votre établissement</p>
-          </div>
-          <button
-            id="openAddModalBtn"
-            class="bg-[#e52421] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-[#c11e1b] transition-all shadow-md hover:shadow-lg"
-            aria-label="Ajouter un nouvel apprenant"
-            title="Ajouter un nouvel apprenant">
-            <i class="ri-add-line"></i> Ajouter un apprenant
-          </button>
-        </div>
+       <!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-[#e52421]">Gestion des Apprenants</h1>
+    <p class="text-sm text-gray-500">Administrez les apprenants de votre établissement</p>
+  </div>
+  <div class="flex flex-col md:flex-row gap-2">
+    <div class="dropdown dropdown-end">
+      <button class="bg-[#e52421] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-[#c11e1b] transition-all shadow-md hover:shadow-lg">
+        <i class="ri-download-line"></i> Télécharger la liste
+      </button>
+      <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52 mt-1">
+        <li>
+          <a href="#" onclick="exportToPDF()">
+            <i class="ri-file-pdf-line text-red-500"></i> Télécharger en PDF
+          </a>
+        </li>
+        <li>
+          <a href="#" onclick="exportToExcel()">
+            <i class="ri-file-excel-line text-green-500"></i> Télécharger en Excel
+          </a>
+        </li>
+      </ul>
+    </div>
+    <button
+      id="openAddModalBtn"
+      class="bg-[#e52421] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-[#c11e1b] transition-all shadow-md hover:shadow-lg"
+      aria-label="Ajouter un nouvel apprenant"
+      title="Ajouter un nouvel apprenant">
+      <i class="ri-add-line"></i> Ajouter un apprenant
+    </button>
+  </div>
+</div>
 
         <!-- Search and Filters Section -->
         <div class="mb-6">
@@ -92,7 +112,7 @@
               <select id="referentielFilter" class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent">
                 <option value="">Tous les référentiels</option>
                 <?php foreach ($referentiels as $ref): ?>
-                  <option value="<?= $ref['id'] ?>"><?= htmlspecialchars($ref['nom']) ?></option>
+                  <option value="<?= $ref['id'] ?>"><?= htmlspecialchars($ref['referentiel']) ?></option>
                 <?php endforeach; ?>
               </select>
             </div>
