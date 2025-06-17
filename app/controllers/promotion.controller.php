@@ -1,10 +1,10 @@
 <?php
+checkAuth();
 require_once "../app/services/promotion.service.php";
 require_once "../app/models/promotion.model.php";
 // require_once "../helpers/functions.php";
 
 // Vérifie l'authentification
-NotReturn();
 
 // Récupère les paramètres GET
 $page = $_GET['page'] ?? 'listePromotion';

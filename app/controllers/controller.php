@@ -16,14 +16,6 @@ function redirect(string $controller, string $page): void {
     header("Location: $url");
     exit;
 }
-// function redirect($controller, $page) {
-//     if (defined('WEBROOT')) {
-//         header('Location: ' . WEBROOT . '?controllers=' .($controller) . '&page='.($page));
-//         exit;
-//     } else {
-//         echo "Erreur : La constante WEBROOT n'est pas définie.";
-//     }
-// }
 // Debug et arrêt de l'exécution
 function dd($var) {
     echo '<pre>';
@@ -43,12 +35,13 @@ function isGet(): bool {
 }
 
 // Redirige si l'utilisateur n'est pas connecté
-function NotReturn() {
-    if (!isset($_SESSION["user"])) {
+function checkAuth() {
+    if (!isset($_SESSION['user'])) {
         redirect('auth', 'login');
-        exit;
+        exit();
     }
 }
+
 
 // Vérifie si l'utilisateur est connecté
 function isConnect(): bool {

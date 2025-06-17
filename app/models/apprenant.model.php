@@ -67,13 +67,15 @@ function createApprenant($data) {
     
     foreach ($params as $i => $value) {
         $paramType = is_int($value) ? PDO::PARAM_INT : 
-                    (is_resource($value) ? PDO::PARAM_LOB : PDO::PARAM_STR);
-        $stmt->bindValue($i+1, $value, $paramType);
+                     (is_resource($value) ? PDO::PARAM_LOB : PDO::PARAM_STR);
+        $stmt->bindValue($i + 1, $value, $paramType);
     }
 
     $stmt->execute();
-    return $pdo->lastInsertId();
+    // Récupère l'ID retourné par PostgreSQL
+    return $stmt->fetchColumn();
 }
+
 
 function getApprenantById($id) {
     $sql = "SELECT a.*, 

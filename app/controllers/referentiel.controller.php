@@ -1,9 +1,9 @@
 <?php
+checkAuth();
 require_once "../app/services/referentiel.service.php";
 require_once "../app/models/referentiel.model.php";
 
 // Vérifie l'authentification
-NotReturn();
 $page = $_GET['page'] ?? 'listeReferentiel';
 $search = $_GET['search'] ?? '';
 $id = isset($_GET['id']) ? (int)$_GET['id'] : null;

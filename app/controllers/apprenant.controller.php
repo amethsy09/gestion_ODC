@@ -1,9 +1,9 @@
 <?php
+// Vérifie l'authentification
+checkAuth();
 require_once "../app/services/apprenant.service.php";
 require_once "../app/models/apprenant.model.php";
 
-// Vérifie l'authentification
-NotReturn();
 
 // Initialisation de la session pour stocker les erreurs et les anciennes entrées
 if (session_status() === PHP_SESSION_NONE) {

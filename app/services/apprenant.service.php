@@ -38,8 +38,7 @@ function creerApprenantHandler() {
         'referentiel' => 'Référentiel',
         'promotion_id' => 'Promotion',
         'statut' => 'Statut'
-    ];
-    
+    ];    
     $errors = [];
     
     foreach ($requiredFields as $field => $label) {
@@ -70,6 +69,7 @@ function creerApprenantHandler() {
         exit();
     }
 
+
     try {
         $photoBinary = handlePhotoUpload();
 
@@ -84,13 +84,16 @@ function creerApprenantHandler() {
             'statut' => $_POST['statut'],
             'photo' => $photoBinary
         ];
+            
 
         $apprenantId = createApprenant($data);
+    dd($apprenantId);
+
 
         if ($apprenantId) {
+
             unset($_SESSION['form_errors'], $_SESSION['old_input']);
             $_SESSION['success_message'] = "Apprenant ajouté avec succès";
-            header('Location: index.php?controllers=apprenant&page=listeApprenant');
             exit();
         }
     } catch (Exception $e) {

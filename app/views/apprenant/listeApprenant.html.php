@@ -294,8 +294,11 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
-      <form id="apprenant_form" class="space-y-6" method="POST" action="?action=add_apprenant" enctype="multipart/form-data">
+      <form id="apprenant_form" class="space-y-6" method="POST" action="" enctype="multipart/form-data">
         <input type="hidden" name="action" value="add_apprenant">
+        <input type="hidden" name="controllers" value="apprenant">
+        <input type="hidden" name="page" value="listeApprenant">
+
         
         <?php if (!empty($_SESSION['form_errors'])): ?>
           <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500">

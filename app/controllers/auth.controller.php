@@ -1,6 +1,12 @@
 <?php
-   
+// checkAuth(); // Vérification de l'authentification
 require_once "../app/controllers/controller.php";
+
+// Empêcher la mise en cache des pages sensibles
+header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1
+header("Pragma: no-cache"); // HTTP 1.0
+header("Expires: 0"); // Proxies
+
 // Gestion de la page demandée
 $page = $_GET['page'] ?? 'login';
 
@@ -9,10 +15,14 @@ if ($page == 'logout') {
 } elseif ($page == 'login') {
     login();
 }
+
 function login() {
+    // Si déjà connecté, rediriger vers la page d'accueil
     if (isset($_SESSION['user'])) {
-    redirect('promotion', 'listePromotion');  
-}
+        redirect('promotion', 'listePromotion');
+        exit(); // Important pour arrêter l'exécution
+    }
+    
     $_SESSION['error'] = [];
 
     if (isPost()) {
@@ -35,16 +45,17 @@ function login() {
 
         // Si pas d'erreur -> authentification
         if (empty($_SESSION['error'])) {
-            // Vérifier d'abord si l'email existe
             $user = getUserByEmail($email); 
             
             if (!$user) {
                 $_SESSION['error']['email'] = 'Cette adresse email n\'existe pas';
             } else {
-                // Maintenant vérifier le mot de passe
                 $user = loginabc($email, $password);
                 if ($user && $user['mot_de_passe'] === $password) {
                     $_SESSION['user'] = $user;
+                    
+                    // Régénérer l'ID de session pour prévenir les attaques de fixation
+                    session_regenerate_id(true);
                     
                     switch ($user['role']) {
                         case 'admin':
@@ -53,6 +64,7 @@ function login() {
                         default:
                             redirect('auth', 'login');
                     }
+                    exit();
                 } else {
                     $_SESSION['error']['global'] = 'Mot de passe incorrect';
                 }
@@ -64,7 +76,24 @@ function login() {
 }
 
 function logout() {
-    session_unset();
+    // Détruire complètement la session
+    $_SESSION = array();
+    
+    // Supprimer le cookie de session
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+    
     session_destroy();
-    redirect('auth', 'login');
+    
+    // Rediriger vers la page de login avec des headers pour empêcher le cache
+    header("Location: index.php?page=login");
+    exit();
 }
+
+
+
