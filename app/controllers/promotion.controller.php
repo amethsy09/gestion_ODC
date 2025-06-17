@@ -47,7 +47,10 @@ try {
             }
             showPromotionDetails($id);
             break;
-
+             case"dashboard":
+                renderView('promotion/dashboard.html.php' , [
+                ]);
+            break;
         default:
             header("Location: " . WEBROOT . "?controllers=promotion&page=listePromotion");
             exit();

@@ -49,11 +49,6 @@ try {
                 redirect('apprenant', 'listeApprenant');
             }
             break;
-            case"dashboard":
-                renderView('apprenant/dashboard.html.php', [
-                    'title' => 'Tableau de bord des apprenants'
-                ]);
-
         default:
             redirect('apprenant', 'listeApprenant');
     }

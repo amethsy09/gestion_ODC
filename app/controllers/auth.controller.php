@@ -1,13 +1,18 @@
 <?php
+   
 require_once "../app/controllers/controller.php";
 // Gestion de la page demandée
 $page = $_GET['page'] ?? 'login';
-if ($page == 'login') {
-    login();
-} elseif ($page == 'logout') {
+
+if ($page == 'logout') {
     logout();
+} elseif ($page == 'login') {
+    login();
 }
 function login() {
+    if (isset($_SESSION['user'])) {
+    redirect('promotion', 'listePromotion');  
+}
     $_SESSION['error'] = [];
 
     if (isPost()) {

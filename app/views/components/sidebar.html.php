@@ -26,8 +26,8 @@
             ?>
             
             <!-- Tableau de bord -->
-            <a href="<?= WEBROOT ?>?controllers=apprenant&page=dashboard" 
-               class="<?= isActive('apprenant', 'dashboard', $currentController, $currentPage) ? 'bg-[#e52421]/10 text-[#e52421]' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' ?> group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+            <a href="<?= WEBROOT ?>?controllers=promotion&page=dashboard" 
+               class="<?= isActive('promotion', 'dashboard', $currentController, $currentPage) ? 'bg-[#e52421]/10 text-[#e52421]' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' ?> group flex items-center px-3 py-2 text-sm font-medium rounded-md">
                 <i class="ri-dashboard-line text-lg mr-3"></i>
                 Tableau de bord
             </a>
