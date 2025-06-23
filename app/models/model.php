@@ -51,8 +51,8 @@ function executeQuery(string $sql, array $params = [], bool $fetchAll = false) {
 
         // Si c'est une requête SELECT on retourne les données
        if (stripos(trim($sql), 'SELECT') === 0 || stripos($sql, 'RETURNING') !== false) {
-            return $fetchAll ? $stmt->fetchAll() : $stmt->fetch();
-        }
+// Toujours retourner un tableau même pour les résultats vides
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];        }
 
         // Sinon (INSERT, UPDATE, DELETE) on retourne true si succès
         return true;

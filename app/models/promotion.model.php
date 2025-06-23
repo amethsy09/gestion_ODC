@@ -1,31 +1,48 @@
 <?php
 require_once "../app/models/model.php";
 
-function findAllPromotion() {
+function findAllPromotion(string $search = '', string $status = 'all'): array {
     $sql = "
         SELECT 
-            p.id,
-            p.nom AS promotion,
-            CONCAT(p.annee_debut, '-', p.annee_fin) AS periode,
-            p.annee_debut,
-            p.annee_fin,
+            p.id, 
+            p.nom as promotion, 
+            p.annee_debut, 
+            p.annee_fin, 
             p.statut,
-            COUNT(a.id) AS nombre_apprenants,
-            r.nom AS referentiel
-        FROM 
-            promotion p
-        LEFT JOIN 
-            apprenant a ON p.id = a.promotion_id
-        LEFT JOIN 
-            referentiel r ON p.referentiel_id = r.id
-        GROUP BY 
-            p.id, p.nom, p.annee_debut, p.annee_fin, p.statut, r.nom
-        ORDER BY 
-            p.annee_debut DESC;
+            p.photo,
+            r.nom as referentiel,
+            COUNT(a.id) as nombre_apprenants
+        FROM promotion p
+        LEFT JOIN promotion_referentiel pr ON p.id = pr.promotion_id
+        LEFT JOIN referentiel r ON pr.referentiel_id = r.id
+        LEFT JOIN apprenant a ON p.id = a.promotion_id
     ";
+
+    $conditions = [];
+    $params = [];
+
+    // Ajouter les conditions de filtre
+    if (!empty($search)) {
+        $conditions[] = "p.nom LIKE ?";
+        $params[] = "%$search%";
+    }
     
-    return executeQuery($sql, [], true);
+    if ($status !== 'all') {
+        $statusValue = ($status === 'active') ? 'Actif' : 'Inactif';
+        $conditions[] = "p.statut = ?";
+        $params[] = $statusValue;
+    }
+
+    // Construire la clause WHERE si nécessaire
+    if (!empty($conditions)) {
+        $sql .= " WHERE " . implode(' AND ', $conditions);
+    }
+
+    $sql .= " GROUP BY p.id, r.nom ORDER BY p.annee_debut DESC";
+
+   return executeQuery($sql, $params, true);
 }
+
 
 function findPromotionById($id) {
     $sql = "

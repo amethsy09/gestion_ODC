@@ -49,31 +49,39 @@
         </div>
 
         <!-- Filters and View Options -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+         <!-- Nouveau formulaire de filtrage PHP -->
+        <form method="GET" action="" class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <input type="hidden" name="controllers" value="promotion">
+          <input type="hidden" name="page" value="listePromotion">
+          <input type="hidden" name="viewType" id="viewTypeInput" value="<?= htmlspecialchars($viewType ?? 'grid') ?>">
           <div class="relative w-full md:w-1/2">
             <i class="ri-search-line absolute left-3 top-3 text-gray-400"></i>
-            <input type="text" id="searchInput" placeholder="Rechercher une promotion..."
+            <input type="text" name="search" value="<?= htmlspecialchars($search ?? '') ?>" 
+                   placeholder="Rechercher une promotion..."
                    class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent">
           </div>
           <div class="flex gap-3 w-full md:w-auto">
-            <select id="statusFilter" class="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent">
-              <option value="all">Tous les statuts</option>
-              <option value="active">Actif</option>
-              <option value="inactive">Inactif</option>
+            <select name="status" class="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e52421] focus:border-transparent">
+              <option value="all" <?= ($status ?? 'all') === 'all' ? 'selected' : '' ?>>Tous les statuts</option>
+              <option value="active" <?= ($status ?? '') === 'active' ? 'selected' : '' ?>>Actif</option>
+              <option value="inactive" <?= ($status ?? '') === 'inactive' ? 'selected' : '' ?>>Inactif</option>
             </select>
+            <button type="submit" class="bg-[#e52421] text-white px-4 py-2 rounded-lg hover:bg-[#c11e1b] transition-all shadow-md hover:shadow-lg">
+              Filtrer
+            </button>
             <div class="bg-gray-100 p-1 rounded-lg flex">
-              <button id="cardViewBtn" class="p-2 rounded-md bg-white shadow-sm text-[#e52421]" aria-label="Vue grille">
+              <button id="cardViewBtn" type="button" class="p-2 rounded-md bg-white shadow-sm text-[#e52421]" aria-label="Vue grille">
                 <i class="ri-grid-fill"></i>
               </button>
-              <button id="tableViewBtn" class="p-2 rounded-md text-gray-500 hover:text-[#e52421]" aria-label="Vue liste">
+              <button id="tableViewBtn" type="button" class="p-2 rounded-md text-gray-500 hover:text-[#e52421]" aria-label="Vue liste">
                 <i class="ri-list-check"></i>
               </button>
             </div>
           </div>
-        </div>
+        </form>
 
         <!-- Promotions Grid View -->
-        <div id="gridView" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="gridView" class="<?= ($viewType ?? 'grid') === 'grid' ? 'grid' : 'hidden' ?> grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <?php if (empty($promotions)): ?>
             <div class="col-span-full py-12 text-center">
               <div class="mx-auto w-40 h-40 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center mb-6 shadow-inner">
@@ -158,7 +166,7 @@
         </div>
 
         <!-- Table View (Hidden by default) -->
-        <div id="tableView" class="hidden bg-white rounded-xl shadow overflow-hidden mt-6">
+        <div id="tableView" class="<?= ($viewType ?? 'grid') === 'table' ? 'block' : 'hidden' ?> bg-white rounded-xl shadow overflow-hidden mt-6">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
@@ -239,73 +247,19 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Éléments du DOM
-    const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
     const cardViewBtn = document.getElementById('cardViewBtn');
     const tableViewBtn = document.getElementById('tableViewBtn');
-    const gridView = document.getElementById('gridView');
-    const tableView = document.getElementById('tableView');
+    const viewTypeInput = document.getElementById('viewTypeInput');
+    const form = document.querySelector('form');
 
-    // Fonction de filtrage
-    function filterPromotions() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const status = statusFilter.value.toLowerCase();
-        
-        // Filtrage pour la vue grille
-        const cards = gridView.querySelectorAll('.bg-white');
-        cards.forEach(card => {
-            const title = card.querySelector('h3').textContent.toLowerCase();
-            const cardStatus = card.querySelector('.absolute').textContent.toLowerCase();
-            
-            const matchesSearch = title.includes(searchTerm);
-            const matchesStatus = status === 'all' || cardStatus.includes(status);
-            
-            card.style.display = (matchesSearch && matchesStatus) ? 'block' : 'none';
-        });
-        
-        // Filtrage pour la vue tableau
-        const rows = tableView.querySelectorAll('tbody tr');
-        rows.forEach(row => {
-            if (row.querySelector('td')) {
-                let matchesSearch = false;
-                const cells = row.querySelectorAll('td');
-                
-                cells.forEach(cell => {
-                    if (cell.textContent.toLowerCase().includes(searchTerm)) {
-                        matchesSearch = true;
-                    }
-                });
-                
-                const rowStatus = row.querySelector('td:nth-child(5) span').textContent.toLowerCase();
-                const matchesStatus = status === 'all' || rowStatus.includes(status);
-                
-                row.style.display = (matchesSearch && matchesStatus) ? 'table-row' : 'none';
-            }
-        });
-    }
-
-    // Écouteurs d'événements
-    searchInput.addEventListener('input', filterPromotions);
-    statusFilter.addEventListener('change', filterPromotions);
-
-    // Basculer entre les vues
     cardViewBtn.addEventListener('click', function() {
-        gridView.classList.remove('hidden');
-        tableView.classList.add('hidden');
-        cardViewBtn.classList.add('bg-white', 'shadow-sm', 'text-[#e52421]');
-        cardViewBtn.classList.remove('text-gray-500');
-        tableViewBtn.classList.remove('bg-white', 'shadow-sm', 'text-[#e52421]');
-        tableViewBtn.classList.add('text-gray-500');
+        viewTypeInput.value = 'grid';
+        form.submit();
     });
 
     tableViewBtn.addEventListener('click', function() {
-        gridView.classList.add('hidden');
-        tableView.classList.remove('hidden');
-        tableViewBtn.classList.add('bg-white', 'shadow-sm', 'text-[#e52421]');
-        tableViewBtn.classList.remove('text-gray-500');
-        cardViewBtn.classList.remove('bg-white', 'shadow-sm', 'text-[#e52421]');
-        cardViewBtn.classList.add('text-gray-500');
+        viewTypeInput.value = 'table';
+        form.submit();
     });
 });
 </script>

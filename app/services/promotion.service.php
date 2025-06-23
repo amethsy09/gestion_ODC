@@ -2,17 +2,32 @@
 require_once "../app/models/promotion.model.php";
 
 function showPromotionList() {
-    $promotions = findAllPromotion(); 
+    // Récupérer les paramètres de filtre
+    $search = $_GET['search'] ?? '';
+    $status = $_GET['status'] ?? 'all';
+$viewType = $_GET['viewType'] ?? 'grid';
+    // Récupérer les promotions avec filtres
+    $promotions = findAllPromotion($search, $status);
+    
+    // Récupérer les stats globales (non filtrées)
+    $allPromotions = findAllPromotion('', 'all');
+    
+    // Calculer les statistiques de manière sécurisée
     $stats = [
-        'total_promotion' => count($promotions),
-        'total_promotionActive' => count(array_filter($promotions, fn($p) => $p['statut'] === 'Actif')),
-        'total_apprenant' => array_sum(array_column($promotions, 'nombre_apprenants')),
-        'total_referentiel' => count(array_unique(array_column($promotions, 'referentiel')))
+        'total_promotion' => count($allPromotions),
+        'total_promotionActive' => array_reduce($allPromotions, function($carry, $item) {
+            return $carry + (($item['statut'] ?? '') === 'Actif' ? 1 : 0);
+        }, 0),
+        'total_apprenant' => array_sum(array_column($allPromotions, 'nombre_apprenants')) ?: 0,
+        'total_referentiel' => count(array_unique(array_column($allPromotions, 'referentiel'))) ?: 0
     ];
     
     RenderView("promotion/listePromotion.html.php", [
         'promotions' => $promotions,
-        'stats' => $stats
+        'stats' => $stats,
+        'search' => $search,
+        'status' => $status,
+        'viewType' => $viewType
     ]);
 }
 
